@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guess the Number</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; }
+    #game { background: white; padding: 20px; border-radius: 8px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input { padding: 8px; font-size: 16px; width: 100px; text-align: center; }
+    button { padding: 8px 15px; font-size: 16px; cursor: pointer; }
+    #message { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div id="game">
+  <h2>Guess a number between 1 and 100</h2>
+  <input type="number" id="guessInput" min="1" max="100">
+  <br><br>
+  <button onclick="checkGuess()">Guess</button>
+  <p id="message"></p>
+</div>
+
+<script>
+  let secretNumber = Math.floor(Math.random() * 100) + 1;
+  let attempts = 0;
+
+  function checkGuess() {
+    const userGuess = Number(document.getElementById('guessInput').value);
+    const message = document.getElementById('message');
+    attempts++;
+
+    if (!userGuess || userGuess < 1 || userGuess > 100) {
+      message.style.color = 'orange';
+      message.textContent = 'Please enter a number between 1 and 100!';
+      return;
+    }
+
+    if (userGuess === secretNumber) {
+      message.style.color = 'green';
+      message.textContent = `Correct! You found it in ${attempts} attempts!`;
+    } else if (userGuess < secretNumber) {
+      message.style.color = 'blue';
+      message.textContent = 'Too low! Try a higher number.';
+    } else {
+      message.style.color = 'red';
+      message.textContent = 'Too high! Try a lower number.';
+    }
+  }
+</script>
+
+</body>
+</html>
