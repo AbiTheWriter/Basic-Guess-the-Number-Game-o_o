@@ -355,7 +355,7 @@
   function makeBotMove() {
     let emptyCells = [];
     for(let i=0; i<9; i++) { if(tttBoard[i] === '') emptyCells.push(i); }
-    if(emptyCells.length > 0) {
+    if(emptyCells.length > 0 && tttActive === false && !document.getElementById('ttt-status').textContent.includes('wins')) {
       let choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       tttBoard[choice] = 'O';
       document.getElementsByClassName('cell')[choice].textContent = 'O';
@@ -363,10 +363,12 @@
       if (checkTTTWin()) {
         document.getElementById('ttt-status').textContent = "🤖 Bot wins! Try again.";
         playSound('wrong');
+        tttActive = false;
         return;
       }
       if (!tttBoard.includes('')) {
         document.getElementById('ttt-status').textContent = "🤝 It's a draw!";
+        tttActive = false;
         return;
       }
     }
@@ -375,9 +377,11 @@
   }
 
   function checkTTTWin() {
-    const lines = [, [3, 4, 5], [6, 7, 8], // Rows, [1, 4, 7], [2, 5, 8], // Columns, [2, 4, 6]             // Diagonals
+    const lines = [, [3, 4, 5], [6, 7, 8],
+, [1, 4, 7], [2, 5, 8],
+, [2, 4, 6]
     ];
-    return lines.some(ln => tttBoard[ln[0]] && tttBoard[ln[0]] === tttBoard[ln[1]] && tttBoard[ln[0]] === tttBoard[ln[2]]);
+    return lines.some(ln => tttBoard[ln[0]] !== '' && tttBoard[ln[0]] === tttBoard[ln[1]] && tttBoard[ln[0]] === tttBoard[ln[2]]);
   }
 
   function resetTTT() {
