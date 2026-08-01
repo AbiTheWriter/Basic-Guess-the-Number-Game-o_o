@@ -4,48 +4,170 @@
   <meta charset="UTF-8">
   <title>Guess the Number</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #f4f4f9; }
-    #game { background: white; padding: 20px; border-radius: 8px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    input { padding: 8px; font-size: 16px; width: 100px; text-align: center; }
-    button { padding: 8px 15px; font-size: 16px; cursor: pointer; }
-    #message { margin-top: 15px; font-weight: bold; }
+    /* Smoothly fade colors instead of snapping instantly */
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      margin-top: 50px; 
+      background: #f4f4f9; 
+      transition: background-color 0.4s ease; 
+    }
+    #game { 
+      background: white; 
+      padding: 30px; 
+      border-radius: 12px; 
+      display: inline-block; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+    }
+    input { 
+      padding: 10px; 
+      font-size: 18px; 
+      width: 120px; 
+      text-align: center; 
+      border: 2px solid #ccc;
+      border-radius: 6px;
+    }
+    button { 
+      padding: 10px 20px; 
+      font-size: 16px; 
+      cursor: pointer; 
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      background: #34495e;
+      color: white;
+      margin: 5px;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #2c3e50;
+    }
+    #message { 
+      margin-top: 15px; 
+      font-size: 18px;
+      font-weight: bold; 
+    }
+    #stats {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
 <div id="game">
   <h2>Guess a number between 1 and 100</h2>
-  <input type="number" id="guessInput" min="1" max="100">
+  <!-- Added autofocus and listener to press Enter key -->
+  <input type="number" id="guessInput" min="1" max="100" autofocus onkeydown="if(event.key==='Enter') checkGuess()">
   <br><br>
   <button onclick="checkGuess()">Guess</button>
+  <button id="resetBtn" onclick="resetGame()" style="display: none; background: #27ae60;">Play Again</button>
+  
   <p id="message"></p>
+  <p id="stats">Attempts: 0</p>
 </div>
 
 <script>
   let secretNumber = Math.floor(Math.random() * 100) + 1;
   let attempts = 0;
 
+  // 🔊 Synthesizer Sound Engine (No external sound files required)
+  function playSound(type) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'correct') {
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Note C5
+      oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Note E5
+      oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // Note G5
+      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.4);
+    } else if (type === 'wrong') {
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(140, audioCtx.currentTime); 
+      oscillator.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.12);
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.12);
+    }
+  }
+
   function checkGuess() {
-    const userGuess = Number(document.getElementById('guessInput').value);
+    const inputElement = document.getElementById('guessInput');
+    const userGuess = Number(inputElement.value);
     const message = document.getElementById('message');
-    attempts++;
+    const stats = document.getElementById('stats');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Block logic if the user already won but keeps clicking
+    if (message.textContent.includes('Correct!')) return;
 
     if (!userGuess || userGuess < 1 || userGuess > 100) {
-      message.style.color = 'orange';
+      message.style.color = '#e67e22'; // Clean Orange
       message.textContent = 'Please enter a number between 1 and 100!';
       return;
     }
 
+    attempts++;
+    stats.textContent = `Attempts: ${attempts}`;
+
     if (userGuess === secretNumber) {
-      message.style.color = 'green';
-      message.textContent = `Correct! You found it in ${attempts} attempts!`;
-    } else if (userGuess < secretNumber) {
-      message.style.color = 'blue';
-      message.textContent = 'Too low! Try a higher number.';
+      message.style.color = 'white';
+      message.textContent = `🎉 Correct! You found it in ${attempts} attempts!`;
+      document.body.style.backgroundColor = "#2ecc71"; // Emerald Green theme
+      resetBtn.style.display = "inline-block"; // Show play again button
+      playSound('correct');
     } else {
-      message.style.color = 'red';
-      message.textContent = 'Too high! Try a lower number.';
+      playSound('wrong');
+      const distance = Math.abs(userGuess - secretNumber);
+
+      // 🎨 Dynamic Proximity Background Colors
+      if (distance <= 5) {
+        document.body.style.backgroundColor = "#e74c3c"; // Hot Fire Red
+        message.style.color = "white";
+      } else if (distance <= 15) {
+        document.body.style.backgroundColor = "#e67e22"; // Warm Orange
+        message.style.color = "white";
+      } else {
+        document.body.style.backgroundColor = "#3498db"; // Icy Cold Blue
+        message.style.color = "white";
+      }
+
+      // Direction hints
+      if (userGuess < secretNumber) {
+        message.textContent = 'Too low! Try a higher number.';
+      } else {
+        message.textContent = 'Too high! Try a lower number.';
+      }
     }
+
+    // Clear input panel and auto-focus for fast tracking
+    inputElement.value = '';
+    inputElement.focus();
+  }
+
+  // 🔄 Fresh Reset Engine
+  function resetGame() {
+    secretNumber = Math.floor(Math.random() * 100) + 1;
+    attempts = 0;
+    
+    document.getElementById('stats').textContent = "Attempts: 0";
+    document.getElementById('message').textContent = "";
+    document.getElementById('guessInput').value = '';
+    document.getElementById('resetBtn').style.display = "none";
+    
+    // Restore base design palette
+    document.body.style.backgroundColor = "#f4f4f9"; 
+    document.getElementById('guessInput').focus();
   }
 </script>
 
